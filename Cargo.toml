@@ -1,0 +1,16 @@
+[package]
+name = "themeport"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Theme engine for Orbit: WCAG contrast math, theme profiles, script-free signed theme-pack manifests. No wallpaper/shell mutation lives here."
+repository = "https://github.com/Can-5/themeport"
+keywords = ["theme", "wcag", "orbit", "accessibility"]
+categories = ["gui"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+
+[dev-dependencies]
+serde_json = "1"
