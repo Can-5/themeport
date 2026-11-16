@@ -131,6 +131,27 @@ impl ThemeProfile {
     }
 }
 
+/// Slugify an arbitrary display name into a theme-id-safe slug: lowercase, ASCII
+/// alphanumerics kept, everything else collapsed to single '-', leading/trailing '-'
+/// trimmed. Returns an empty string when nothing usable remains (callers must reject).
+pub fn slugify(name: &str) -> String {
+    let mut out = String::with_capacity(name.len());
+    let mut last_dash = true; // trim leading dashes: start with a dash already "pending"
+    for c in name.chars().flat_map(|c| c.to_lowercase()) {
+        if c.is_ascii_alphanumeric() {
+            out.push(c);
+            last_dash = false;
+        } else if !last_dash {
+            out.push('-');
+            last_dash = true;
+        }
+    }
+    while out.ends_with('-') {
+        out.pop();
+    }
+    out
+}
+
 fn validate_slug(id: &str) -> Result<(), ThemePortError> {
     let ok = !id.is_empty()
         && id.len() <= 64
@@ -195,6 +216,21 @@ impl PackManifest {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn slugify_cases() {
+        assert_eq!(slugify("Amber Night"), "amber-night");
+        assert_eq!(slugify("  --Weird__Name!!  "), "weird-name");
+        assert_eq!(slugify("Solarized (Dark) #2"), "solarized-dark-2");
+        assert_eq!(slugify("Already-Slug_123"), "already-slug-123");
+        assert_eq!(slugify("!!!"), "");
+        assert_eq!(slugify(""), "");
+        assert_eq!(slugify("a---b___c"), "a-b-c");
+        // A slug produced from a normal name passes validate_slug via ThemeProfile::new
+        let id = slugify("My Cool Theme!");
+        let accent = ThemeColor::parse("#6c8cff").unwrap();
+        assert!(ThemeProfile::new(id, "My Cool Theme!", accent, true).is_ok());
+    }
 
     #[test]
     fn hex_parsing_normalizes_case() {
